@@ -1,4 +1,4 @@
-package com.d10f.trasher.commands;
+package com.d10f.trasher.controllers;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -8,7 +8,7 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 @Command(name = "remove", description = "Deletes the given files by sending them to the trash can", mixinStandardHelpOptions = true)
-public class RemoveCommand implements Callable<Integer> {
+public class RemoveController implements Callable<Integer> {
 
     @Parameters(description = "The files to be removed.")
     private File[] files;
@@ -28,9 +28,9 @@ public class RemoveCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         for (File file : files) {
-            // TODO: Check file system:
-            //       - If local file, check if a trash directory already exists at $XDG_DATA_HOME/Trash.
-            //       - If remote file, check if a trash directory already exists at the root of the file system.
+            // TODO: Check if directory $XDG_DATA_HOME/Trash exists.
+            System.out.println(file.getAbsoluteFile());
+            System.out.println(file.exists());
         }
 
         return 0;
