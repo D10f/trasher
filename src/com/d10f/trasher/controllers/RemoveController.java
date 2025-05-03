@@ -7,6 +7,8 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+import com.d10f.trasher.entities.Trash;
+
 @Command(name = "remove", description = "Deletes the given files by sending them to the trash can", mixinStandardHelpOptions = true)
 public class RemoveController implements Callable<Integer> {
 
@@ -27,12 +29,8 @@ public class RemoveController implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        for (File file : files) {
-            // TODO: Check if directory $XDG_DATA_HOME/Trash exists.
-            System.out.println(file.getAbsoluteFile());
-            System.out.println(file.exists());
-        }
-
+        Trash trash = new Trash();
+        trash.send(files);
         return 0;
     }
 }
