@@ -30,7 +30,7 @@ public class RemoveController implements Callable<Integer> {
     @Override
     public Integer call() {
         Trash trash = new Trash();
-        trash.send(files);
+        trash.deleteFiles(files);
         return 0;
     }
 }

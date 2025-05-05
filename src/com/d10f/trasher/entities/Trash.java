@@ -44,38 +44,38 @@ public class Trash {
      *
      * @param filesToDelete the list of files to be sent to the trash
      */
-    public void send(File... filesToDelete) {
+    public void deleteFiles(File... filesToDelete) {
         for (File file : filesToDelete) {
+            File dest = getDestinationFilePath(file);
+            System.out.println("Sending " + file.getName() + " to: " + dest.getAbsolutePath());
+//            file.renameTo(dest);
+        }
+    }
 
-            File dest = new File(this.files.getAbsoluteFile(), file.getName());
+    private File getDestinationFilePath(File fileToDelete) {
+        File dest = new File(this.files.getAbsoluteFile(), fileToDelete.getName());
 
-            // TODO: Check if a file with the same name already exists in $TRASH/files
+        while (dest.exists()) {
+            String newName = dest.getName().replaceAll("\\..*$", "");
+            String extension = dest.getName().replaceAll("^[^.]+", "");
 
-            while (dest.exists()) {
-                String newName = dest.getName().replaceAll("\\..*$", "");
-                String extension = dest.getName().replaceAll("^[^.]+", "");
+            Pattern versionRe = Pattern.compile("\\.(\\d+)(\\..*)$");
+            Matcher versionMatcher = versionRe.matcher(extension);
 
-                Pattern versionRe = Pattern.compile("\\.(\\d+)(\\..*)$");
-                Matcher versionMatcher = versionRe.matcher(extension);
+            int versionNum = 2;
 
-                int versionNum = 2;
+            if (versionMatcher.find()) {
+                String version = versionMatcher.group(1);
+                String ext = versionMatcher.group(2);
 
-                if (versionMatcher.find()) {
-                    String version = versionMatcher.group(1);
-                    String ext = versionMatcher.group(2);
-
-                    versionNum = Integer.parseInt(version) + 1;
-                    extension = ext;
-                }
-
-                System.out.println("Renaming " + dest.getName() + " to: " + newName + "." + versionNum + extension);
-                dest = new File(this.files.getAbsoluteFile(), newName + "." + versionNum + extension);
+                versionNum = Integer.parseInt(version) + 1;
+                extension = ext;
             }
 
-            System.out.println("Sending " + file.getName() + " to: " + dest.getAbsolutePath());
-
-            file.renameTo(dest);
+            dest = new File(this.files.getAbsoluteFile(), newName + "." + versionNum + extension);
         }
+
+        return dest;
     }
 
     private void createSubdirectories() throws IOException {
