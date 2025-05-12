@@ -4,7 +4,7 @@ import org.ini4j.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,20 +58,24 @@ public class Trash {
             File dest = getDestinationFilePath(file);
             createTrashMetadataFile(dest);
 //            File meta = createTrashMetadataFile(file);
-            System.out.println("Sending " + file.getName() + " to: " + files.getAbsolutePath() + "/" + dest);
+            System.out.println("Sending " + file.getName() + " to: " + files.getAbsolutePath() + "/" + dest.getName());
 //            file.renameTo(dest);
         }
     }
 
     private void createTrashMetadataFile(File fileToDelete) {
         try {
-            String deletionDate = LocalTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            String deletionDate = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-            Wini ini = new Wini(new File(info, fileToDelete.getName() + ".trashinfo"));
-            ini.put(TRASH_INFO_INI_HEADER, TRASH_INFO_INI_PROP_PATH, fileToDelete.getAbsoluteFile());
+            File trashedFileInfo = new File(info, fileToDelete.getName() + ".trashinfo");
+            trashedFileInfo.createNewFile();
+            Ini ini = new Ini(trashedFileInfo);
+            ini.put(TRASH_INFO_INI_HEADER, TRASH_INFO_INI_PROP_PATH, fileToDelete.getAbsolutePath());
             ini.put(TRASH_INFO_INI_HEADER, TRASH_INFO_INI_PROP_DATE, deletionDate);
             ini.store();
 
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
