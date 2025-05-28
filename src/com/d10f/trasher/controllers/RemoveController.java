@@ -5,12 +5,19 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NotDirectoryException;
 import java.util.concurrent.Callable;
 
 import com.d10f.trasher.entities.Trash;
 
 @Command(name = "remove", description = "Deletes the given files by sending them to the trash can", mixinStandardHelpOptions = true)
 public class RemoveController implements Callable<Integer> {
+
+    private static final int ERR_TRASH_NOT_DIRECTORY = 1;
+    private static final int ERR_ACCESS_DENIED = 2;
 
     @Parameters(description = "The files to be removed.")
     private File[] files;
@@ -29,8 +36,26 @@ public class RemoveController implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        Trash trash = new Trash();
-        trash.deleteFiles(files);
-        return 0;
+        int returnCode = 0;
+        Exception err = null;
+
+        try {
+            Trash trash = new Trash();
+            trash.deleteFiles(files);
+        } catch (NotDirectoryException e) {
+            err = e;
+            returnCode = ERR_TRASH_NOT_DIRECTORY;
+        } catch (AccessDeniedException e) {
+            err = e;
+            returnCode = ERR_ACCESS_DENIED;
+        } catch (IOException e) {
+            err = e;
+            returnCode = -1;
+        }
+
+        if (err != null)
+            System.err.println(err.getMessage());
+
+        return returnCode;
     }
 }

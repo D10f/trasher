@@ -4,6 +4,8 @@ import org.ini4j.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NotDirectoryException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
@@ -30,22 +32,21 @@ public class Trash {
 
     private int size;
 
-    public Trash() {
-        root = System.getenv().containsKey("XDG_DATA_HOME")
-                ? new File(System.getenv("XDG_DATA_HOME"), "Trash")
-                : new File(System.getenv("HOME"), ".local/share/Trash");
+    public Trash() throws IOException {
+        String xdgDataHome = System.getenv().containsKey("XDG_DATA_HOME")
+                ? System.getenv("XDG_DATA_HOME") + "Trash"
+                : System.getenv("HOME") + ".local/share/Trash";
 
-        info = new File(root, TRASH_INFO_DIR);
-        files = new File(root, TRASH_FILES_DIR);
+        root = createDirectoryOrFail(xdgDataHome);
+        info = createDirectoryOrFail(xdgDataHome + TRASH_INFO_DIR);
+        files =  createDirectoryOrFail(xdgDataHome + TRASH_FILES_DIR);
+
         directorySizes = new File(root, TRASH_DIRECTORY_SIZES);
-
-        try {
-            createSubdirectories();
-            calculateTrashSize();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
+        if (!directorySizes.exists() && !directorySizes.createNewFile()) {
+            throw new IOException("Unable to create file: directorySizes.");
         }
+
+        calculateTrashSize();
     }
 
     /**
@@ -127,22 +128,23 @@ public class Trash {
         return dest;
     }
 
-    private void createSubdirectories() throws IOException {
-        if (!root.exists() && !root.mkdir()) {
-            throw new IOException("Unable to create Trash directory: info.");
+    private File createDirectoryOrFail(String path) throws IOException {
+
+        File newDirectory = new File(path);
+
+        if (! newDirectory.exists() && ! newDirectory.mkdirs()) {
+            throw new IOException("Unable to create newDirectory for: " + newDirectory.getAbsolutePath());
         }
 
-        if (!info.exists() && !info.mkdir()) {
-            throw new IOException("Unable to create directory: info.");
+        if (! newDirectory.isDirectory()) {
+            throw new NotDirectoryException("This location is not a newDirectory.");
         }
 
-        if (!files.exists() && !files.mkdir()) {
-            throw new IOException("Unable to create directory: files.");
+        if (! newDirectory.canRead() || ! newDirectory.canWrite() || ! newDirectory.canExecute()) {
+            throw new AccessDeniedException("You do not have permission to access this location.");
         }
 
-        if (!directorySizes.exists() && !directorySizes.createNewFile()) {
-            throw new IOException("Unable to create file: directorySizes.");
-        }
+        return newDirectory;
     }
 
     private void calculateTrashSize() {
